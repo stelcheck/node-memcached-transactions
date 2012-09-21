@@ -210,14 +210,20 @@ MemcachedTransaction.prototype._exec = function (op, cb) {
 			this.debug('MemcachedTransaction: touching key', op.key, 'with TTL', op.ttl || 0);
 		}
 
-		this.client.command(function touch(noreply) {
-			return {
-				command: ['touch', op.key, op.ttl || 0].join(' '),
-				key: op.key,
-				type: 'touch',
-				callback: cb
-			};
-		});
+		if (this.client.touch) {
+			this.client.touch(op.key, op.ttl || 0, cb);
+		}
+		else {
+			this.client.command(function touch(noreply) {
+				return {
+					command: ['touch', op.key, op.ttl || 0].join(' '),
+					key: op.key,
+					type: 'touch',
+					callback: cb
+				};
+			});
+		}
+
 		break;
 	default:
 		if (cb) {
